@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+    # Reverse Proxy
+    proxy:
+        image: nginx:alpine
+        container_name: proxy
+        hostname: proxy
+        depends_on:
+            - compte
+        ports:
+            - 80:80
+        volumes:
+            - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+        networks:
+            - default
+        restart: on-failure
+
+    # NodeJS RESTful API Microservice
+    compte:
+        build: ./apps/compte
+        container_name: compte
+        hostname: compte
+        depends_on:
+            - DButilisateurs
+        ports:
+            - 9001:9000
+        volumes:
+            - "./apps/compte/app:/usr/src/app"
+        networks:
+            - default
+        restart: on-failure
+    
+    # DB
+    DButilisateurs:
+        image: mongo:latest
+        container_name: DButilisateurs
+        hostname: DButilisateurs
+        ports:
+            - 27017:27017
+        volumes:
+            - "db-data:/data/db"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+        networks:
+            - default
+        restart: on-failure
+
+networks:
+  default:
+
+volumes:
+  db-data:
