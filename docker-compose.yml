@@ -8,6 +8,7 @@ services:
         hostname: proxy
         depends_on:
             - compte
+            - auth
         ports:
             - 80:80
         volumes:
@@ -27,6 +28,20 @@ services:
             - 9001:9000
         volumes:
             - "./apps/compte/app:/usr/src/app"
+        networks:
+            - default
+        restart: on-failure
+
+    auth:
+        build: ./apps/auth
+        container_name: auth
+        hostname: auth
+        depends_on:
+            - DButilisateurs
+        ports:
+            - 9002:9000
+        volumes:
+            - "./apps/auth/app:/usr/src/app"
         networks:
             - default
         restart: on-failure
