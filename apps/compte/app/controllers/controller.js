@@ -4,16 +4,30 @@ const User = require('../models/User');
 exports.createUser = async (req, res) => {
     try {
         // Récupérer les données de la requête
-        const { name, email, age } = req.body;
+        const userData = {
+            username : req.body.username,
+            password : req.body.username,
+            name: req.body.name ?? null,
+            email: req.body.email ?? null,
+            age: req.body.age ?? null
+        };
 
-        // Créer un nouveau user avec les données reçues
-        const newUser = new User({ name, email, age });
+        // On vérifie si le user est déjà existant
+        const user = await User.find({username : userData.username});
+        if(user[0] == null){
+            // Créer un nouveau user avec les données reçues
+            const newUser = new User({ username : userData.username, password : userData.password, name: userData.name, email : userData.email, age: userData.age});
 
-        // Enregistrer le nouveau user dans la base de données
-        await newUser.save();
+            // Enregistrer le nouveau user dans la base de données
+            await newUser.save();
 
-        // Répondre avec la nouvelle tâche créée
-        res.status(201).json(newUser);
+            // Répondre avec le nouveau user créé
+            res.status(201).json(newUser);
+        } else {
+            // Le user existe déjà, erreur 409 CONFLICT
+            res.status(409).json({ message: 'Le user existe déjà' });
+        }
+        
     } catch (err) {
         // En cas d'erreur, renvoyer une réponse d'erreur
         console.error('Erreur lors de la création du User :', err);
@@ -57,6 +71,27 @@ exports.getUserById = async (req, res) => {
     }
 };
 
+// Fonction pour récupérer une seule tâche par son ID
+exports.getUser = async (req, res) => {
+    try {
+        // Récupérer l'ID du user à partir des paramètres de la requête
+        const userData = {
+            username : req.body.username
+        };
+
+        // Récupérer le user correspondant à l'ID de la base de données
+        const user = await User.find({username : userData.username});
+        // Vérifier si le user existe
+        if (user[0] == null) {
+            return res.status(404).json({ message: 'User non trouvée' });
+        }
+        
+        return res.json(user);
+    } catch (err) {
+        console.error('Erreur lors de la récupération du user :', err);
+        res.status(500).json({ message: 'Erreur lors de la récupération du user' });
+    }
+};
 // Fonction pour mettre à jour une user par son ID
 exports.updateUserById = async (req, res) => {
     try {

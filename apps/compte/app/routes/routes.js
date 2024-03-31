@@ -8,6 +8,9 @@ router.post('/users', controller.createUser);
 // Récupérer tous les users
 router.get('/users', controller.getAllUsers);
 
+// Récupérer les données d'un user
+router.post('/user', controller.getUser);
+
 // Récupérer un user par son ID
 router.get('/users/:id', controller.getUserById);
 

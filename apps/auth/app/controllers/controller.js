@@ -1,25 +1,78 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const User_DB = [];
+const axios = require('axios');
 
-exports.register = (req, res) => {
-    var newUser = new User(req.body.username, bcrypt.hashSync(req.body.password, 10));
-    User_DB.push(newUser);
-    return res.status(201).json({
-        "msg": "New User created !"
-    });
+exports.register = async (req, res) => {
+    try{
+        // Récupération des données du body
+        const data = {
+            username : req.body.username,
+            password : bcrypt.hashSync(req.body.password, 10)
+        };
+        // Configuration de la requête
+        const config = {
+            headers: {
+            'Content-Type': 'application/json'
+            }
+        };
+        var url = "http://compte:9000/users"; 
+
+        axios.post(url, data, config)
+        .then(response => {
+            if (response.status >= 200 && response.status < 300) {
+                res.status(201).json({
+                    "message": "Nouvel utilisateur créé !"
+                });
+            }
+        })
+        .catch(error => {
+            if(error.response.status == 409){
+                return res.status(409).json({message: "Le user existe déjà !" });
+            }
+            console.error('Erreur lors de la requête :', error);
+            return res.status(500).json({ message: 'Erreur lors de la création du User' });
+        });
+    } catch (err) {
+        console.error('Erreur lors de la création du User :', err);
+        res.status(500).json({ message: 'Erreur lors de la création du User' });
+    }
 };
 
 exports.login = (req, res) => {
-    const { username, password } = req.body;
-  
-    const user = User_DB.find((u) => u.username === username && bcrypt.compareSync(password, u.password));
-    if (user) {
-        const accessToken = jwt.sign({ username: user.username, exp: Math.floor(Date.now() / 1000) + 120 }, process.env.ACCESS_JWT_KEY);
-        return res.status(200).json({message : "You are now connected !", yourAccessToken: accessToken});
-    } else {
-        return res.status(401).json({ message: "Invalid credentials" });
+    try{
+        // Récupération des données du body
+        const data = {
+            username : req.body.username
+        };
+        // Configuration de la requête
+        const config = {
+            headers: {
+            'Content-Type': 'application/json'
+            }
+        };
+        var url = "http://compte:9000/user"; 
+        axios.post(url, data, config)
+        .then(response => {
+            if (response.status >= 200 && response.status < 300) {
+                if(bcrypt.compareSync(req.body.password, response.data[0].password)){
+                    const accessToken = jwt.sign({ username: data.username, exp: Math.floor(Date.now() / 1000) + 120 }, process.env.ACCESS_JWT_KEY);
+                    return res.status(200).json({ message : "You are now connected !", yourAccessToken: accessToken});
+                } else {
+                    return res.status(401).json({message: "Invalid credentials" });
+                }
+            }
+        })
+        .catch(error => {
+            if(error.response.status == 404){
+                return res.status(404).json({message: "User non trouvé" });
+            }
+            console.error('Erreur lors de la requête :', error);
+            return res.status(500).json({ message: 'Erreur lors du login du User' });
+        });
+    } catch (err) {
+        console.error('Erreur lors du login du User :', err);
+        res.status(500).json({ message: 'Erreur lors du login du User' });
     }
 };
 
@@ -44,19 +97,6 @@ exports.authenticate = (req, res) => {
         if (err) {
             return res.status(401).json({ message: "Token invalide. Accès non autorisé." });
         } else {
-            // Ici, vous pouvez effectuer d'autres vérifications, telles que vérifier si l'utilisateur décodé existe dans votre système
-            // Par exemple, si decoded contient l'ID de l'utilisateur, vous pouvez rechercher cet utilisateur dans votre base de données
-            // Si l'utilisateur n'existe pas ou n'est pas autorisé, vous pouvez renvoyer une réponse 401 ou 403 en conséquence.
-
-            // Exemple: Vérification si l'utilisateur décodé existe
-            // User.findById(decoded.userId, (err, user) => {
-            //     if (err || !user) {
-            //         return res.status(401).json({ message: "Utilisateur non trouvé. Accès non autorisé." });
-            //     }
-            //     // Si l'utilisateur existe, vous pouvez continuer avec d'autres opérations
-            // });
-
-            // Exemple simple: Renvoyer une réponse adaptée en fonction de la réussite de l'authentification
             return res.status(200).json({ message: "Authentification réussie." });
         }
     });
