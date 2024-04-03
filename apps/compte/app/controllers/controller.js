@@ -6,7 +6,7 @@ exports.createUser = async (req, res) => {
         // Récupérer les données de la requête
         const userData = {
             username : req.body.username,
-            password : req.body.username,
+            password : req.body.password,
             name: req.body.name ?? null,
             email: req.body.email ?? null,
             age: req.body.age ?? null

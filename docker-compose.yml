@@ -9,6 +9,7 @@ services:
         depends_on:
             - compte
             - auth
+            - front
         ports:
             - 80:80
         volumes:
@@ -42,6 +43,21 @@ services:
             - 9002:9000
         volumes:
             - "./apps/auth/app:/usr/src/app"
+        networks:
+            - default
+        restart: on-failure
+
+    front:
+        build: ./apps/front
+        container_name: front
+        hostname: front
+        depends_on:
+            - compte
+            - auth
+        ports:
+            - 9003:9000
+        volumes:
+            - "./apps/front/src:/usr/src/src"
         networks:
             - default
         restart: on-failure
