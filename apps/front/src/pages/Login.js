@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import PopupModal from '../composants/Popup';
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,7 +15,7 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost/api/auth/login', { username, password });
       setResponse(response.data.message);
-      console.log(response.data.yourAccessToken)
+      Cookies.set('token', response.data.yourAccessToken);
       setModalIsOpen(true);
     } catch (error) {
       console.error('Error:', error);
@@ -50,7 +51,8 @@ const Login = () => {
       <button onClick={handleLogin}>Login</button>
       <br></br>
       <p>No account?</p>
-      <Link to="/register">Register</Link>
+      <Link to="/register">Register</Link><br></br>
+      <Link to="/compte">Compte</Link>
     </div>
   );
 };
